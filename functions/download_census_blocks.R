@@ -7,7 +7,7 @@ download_census_blocks <- function(infile = "data/censusblocks.Rds"){
 
     ## Get census track data
     if(!file.exists(infile)){
-        census_blocks <- tigris::blocks(state = '17', county = '031')
+        census_blocks <- tigris::blocks(state = '17')
         saveRDS(census_blocks, infile)
     } else {
         census_blocks <- readRDS(infile)

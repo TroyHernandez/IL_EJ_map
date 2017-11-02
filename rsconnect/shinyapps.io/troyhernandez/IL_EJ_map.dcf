@@ -1,0 +1,13 @@
+name: IL_EJ_map
+title: IL_EJ_map
+username:
+account: troyhernandez
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 231487
+bundleId: 1056827
+url: https://troyhernandez.shinyapps.io/IL_EJ_map/
+when: 1509655428.9845
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .gitattributes|dataMake.R|README.md|data/.DS_Store|data/EJSCREEN_2017_USPR_Public.csv|data/EJScreen_Index_DescriptionsV4_Pub.xlsx|functions/.DS_Store|functions/download_census_blocks.R|functions/download_census_tracts.R
