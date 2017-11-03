@@ -26,7 +26,6 @@ mb_attribution <- paste("© <a href='https://www.mapbox.com/about/maps/'>Mapbox<
 # https://github.com/SimonGoring/ShinyLeaflet-tutorial/blob/master/Shiny-leaflet-tutorial.Rmd
 
 ui <- fluidPage(
-  titlePanel("Illinois Environmental Justice Communities Map"), 
   sidebarLayout(
     sidebarPanel(
       selectInput("col", "Choose a column:",
@@ -35,7 +34,8 @@ ui <- fluidPage(
       plotOutput("hist")),
     mainPanel(leafletOutput("MapPlot1"))
   ),
-  fluidRow(DT::dataTableOutput("table"))
+  fluidRow(DT::dataTableOutput("table"),
+           includeMarkdown('README.md'))
 )
 
 #Set up server
