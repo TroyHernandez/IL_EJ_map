@@ -2,12 +2,11 @@
 library(leaflet)
 census_tracts <- readRDS("data/censustracts_IL.Rds")
 dat.shiny <- readRDS("data/ShinyDat.RDS")
-dat.shiny$EnviroScore <- round(dat.shiny$EnviroScore, 2)
-dat.shiny$EnvironmentalIndicator <- round(dat.shiny$EnvironmentalIndicator, 2)
-dat.shiny$DemographicIndicator <- round(dat.shiny$DemographicIndicator, 2)
+for(i in 3:ncol(dat.shiny)){
+  dat.shiny[, i] <- round(dat.shiny[, i], 2)
+}
 
 perc.rank <- function(x) trunc(rank(x)) / length(x)
-pal <- colorQuantile("Reds", NULL, n = 9)
 
 ##==============================================================================
 ## MAPBOX KEY
@@ -27,8 +26,16 @@ mb_attribution <- paste("© <a href='https://www.mapbox.com/about/maps/'>Mapbox<
 # https://github.com/SimonGoring/ShinyLeaflet-tutorial/blob/master/Shiny-leaflet-tutorial.Rmd
 
 ui <- fluidPage(
-  leafletOutput("MapPlot1"),
-  fluidRow(DT::dataTableOutput("table"), height = 600, width = 800)
+  titlePanel("Illinois Environmental Justice Communities Map"), 
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("col", "Choose a column:",
+                  choices = colnames(dat.shiny)[-1],
+                  selected = "EnviroScore"),
+      plotOutput("hist")),
+    mainPanel(leafletOutput("MapPlot1"))
+  ),
+  fluidRow(DT::dataTableOutput("table"))
 )
 
 #Set up server
@@ -36,14 +43,26 @@ server <- function(input, output){
 
   output$table <- DT::renderDataTable(DT::datatable({dat.shiny}))
 
+  output$hist <- renderPlot({
+    hist(as.numeric(dat.shiny[, input$col]), main = "", xlab = input$col)
+  })
+  
   output$MapPlot1 <- renderLeaflet({
+    if(input$col == "EJcommunity"){
+      pal <- colorNumeric("Reds", NULL,
+                           n = length(unique(dat.shiny[, input$col])))
+    } else {
+      pal <- colorQuantile("Reds", NULL,
+                           n = min(9, length(unique(dat.shiny[, input$col]))))
+    }
     leaflet() %>%
-      addTiles(urlTemplate = MAPBOX_STYLE_TEMPLATE, attribution = mb_attribution) %>%
+      addTiles(urlTemplate = MAPBOX_STYLE_TEMPLATE,
+               attribution = mb_attribution) %>%
       addPolygons(data=census_tracts, weight=1, fillOpacity=.5, color="black",
-                  fillColor = ~pal(dat.shiny$EnviroScore),
-                  label=paste0("Census Tract ", census_tracts$GEOID, "\n",
-                               "EnviroScore Percentile ",
-                               round(perc.rank(dat.shiny$EnviroScore), 2)),
+                  fillColor = ~pal(as.numeric(dat.shiny[, input$col])),
+                  label=paste0("Tract ", census_tracts$GEOID, " ",
+                               input$col, " ",
+                               dat.shiny[, input$col]),
                   smoothFactor=.02)
   })
 }

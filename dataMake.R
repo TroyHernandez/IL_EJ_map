@@ -55,12 +55,14 @@ dat3 <- aggregate(dat2, by = list(ID.tract), FUN = "mean")
 colnames(dat3)[1] <- "ID"
 
 # Check to see all tracts covered
-sum(as.character(dat4$ID)!=sort(census_tracts$GEOID))
+sum(as.character(dat3$ID)!=sort(census_tracts$GEOID))
+# Needs to be 0
+# [1] 0
 ##########################################
 perc.rank <- function(x) trunc(rank(x)) / length(x)
 dat4 <- data.frame(ID = as.character(dat3[, 1]),
                    apply(dat3[, -1], 2, perc.rank))
-rownames(dat4) <- as.character(dat4$ID) #[order(census_tracts$GEOID), ]
+rownames(dat4) <- as.character(dat4$ID)
 dat5 <- dat4[census_tracts$GEOID, ]
 dat.env2 <- rowMeans(dat5[, c("CANCER", "RESP", "DSLPM", "PM25", "OZONE",
                               "PRE1960", "PTRAF", "PRMP", "PTSDF", "PNPL",
@@ -74,7 +76,8 @@ dat.shiny <- data.frame(CensusTract = census_tracts$GEOID,
                         EJcommunity = dat.EJ,
                         EnviroScore = dat.EnviroScore,
                         EnvironmentalIndicator = dat.env2,
-                        DemographicIndicator = dat.demo2)
+                        DemographicIndicator = dat.demo2,
+                        dat5[, -1])
 # dat.shiny <- dat.shiny[order(dat.shiny$EnviroScore, decreasing = TRUE), ]
 row.names(dat.shiny) <- NULL
 saveRDS(dat.shiny, "data/ShinyDat.RDS")
