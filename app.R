@@ -51,18 +51,23 @@ server <- function(input, output){
     if(input$col == "EJcommunity"){
       pal <- colorNumeric("Reds", NULL,
                            n = length(unique(dat.shiny[, input$col])))
+      leaflet.label <- paste0("Tract ", census_tracts$GEOID, " ",
+                              input$col, " ",
+                              dat.shiny[, input$col])
     } else {
       pal <- colorQuantile("Reds", NULL,
                            n = min(9, length(unique(dat.shiny[, input$col]))))
+      leaflet.label <- paste0("Tract ", census_tracts$GEOID, " ",
+                              input$col, " ",
+                              dat.shiny[, input$col], " EJcommunity ",
+                              dat.shiny[, "EJcommunity"])
     }
     leaflet() %>%
       addTiles(urlTemplate = MAPBOX_STYLE_TEMPLATE,
                attribution = mb_attribution) %>%
       addPolygons(data=census_tracts, weight=1, fillOpacity=.5, color="black",
                   fillColor = ~pal(as.numeric(dat.shiny[, input$col])),
-                  label=paste0("Tract ", census_tracts$GEOID, " ",
-                               input$col, " ",
-                               dat.shiny[, input$col]),
+                  label=leaflet.label,
                   smoothFactor=.02)
   })
 }
