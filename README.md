@@ -1,4 +1,4 @@
-# "Illinois Environmental Justice Communities Map"
+# Illinois Environmental Justice Communities Map
 
 [This code](https://github.com/TroyHernandez/IL_EJ_map) generates [a map](https://troyhernandez.shinyapps.io/IL_EJ_map/) (patience! it takes a minute load) that visualizes the Illinois Power Agency's (IPA) Environmental Justice (EJ) Communities.  The IPA has a fund for renewable energy according to the [Future Jobs Energy Act](https://www.illinois.gov/sites/ipa/Pages/Renewable_Resources.aspx) which has a pot of money for job training for folks in EJ communities to install solar panels and what not.
 
@@ -9,6 +9,8 @@ Here is what the IPA said about calculating which communities met the “EJ crit
 The IPA goes on to say:
 
 > Communities with scores in the top 25% of scores would then be defined as Environmental Justice Communities for the purpose of the Illinois Solar for All Program.
+
+That means: For the purposes of this visualization, census blocks with an EnviroScore of 75% or greater are "Environmental Justice Communities".
 
 The environmental indicators are:
 

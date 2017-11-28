@@ -72,15 +72,31 @@ dat.demo2 <- rowMeans(dat5[, c("LOWINCPCT", "MINORPCT", "LESSHSPCT",
 dat.EnviroScore <- (dat.env2 * dat.demo2)
 dat.EJ <- (dat.EnviroScore > quantile(dat.EnviroScore)[4])
 
+dat.shiny.percentile <- data.frame(CensusTract = census_tracts$GEOID,
+                                   EJcommunity = dat.EJ,
+                                   EnviroScore = perc.rank(dat.EnviroScore),
+                                   EnvironmentalIndicator = perc.rank(dat.env2),
+                                   DemographicIndicator = perc.rank(dat.demo2),
+                                   dat5[, -1])
+dat6 <- data.frame(ID = as.character(dat3[, 1]),
+                   dat3[, -1])
+rownames(dat6) <- as.character(dat6$ID)
+dat7 <- dat6[census_tracts$GEOID, ]
+
 dat.shiny <- data.frame(CensusTract = census_tracts$GEOID,
                         EJcommunity = dat.EJ,
                         EnviroScore = dat.EnviroScore,
                         EnvironmentalIndicator = dat.env2,
                         DemographicIndicator = dat.demo2,
-                        dat5[, -1])
+                        dat7[, -1])
+
 # dat.shiny <- dat.shiny[order(dat.shiny$EnviroScore, decreasing = TRUE), ]
 row.names(dat.shiny) <- NULL
 saveRDS(dat.shiny, "data/ShinyDat.RDS")
+# dat.shiny <- readRDS("data/ShinyDat.RDS")
+row.names(dat.shiny.percentile) <- NULL
+saveRDS(dat.shiny.percentile, "data/ShinyDatPercentile.RDS")
+# dat.shiny <- readRDS("data/ShinyDatPercentile.RDS")
 ##==============================================================================
 ## BASE MAP
 ##==============================================================================
