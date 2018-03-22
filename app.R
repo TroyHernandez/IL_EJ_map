@@ -1,6 +1,6 @@
 
 library(leaflet)
-census_tracts <- readRDS("data/censustracts_IL.Rds")
+census_tracts <- readRDS("data/censustracts_IL_gsimplified.Rds")
 
 perc.rank <- function(x) trunc(rank(x)) / length(x)
 
