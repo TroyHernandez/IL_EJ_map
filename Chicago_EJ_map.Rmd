@@ -1,0 +1,65 @@
+---
+title: "Chicago EJ Map"
+author: "Troy Hernandez"
+date: "March 25, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Chicago EJ Map
+
+```{r}
+library(leaflet)
+library(sp)
+# census_tracts <- readRDS("data/censustracts_IL.Rds")
+dat.shiny <- readRDS("data/ChicagoShinyDat.RDS")
+dat.shiny.pct <- readRDS("data/ChicagoShinyDatPercentile.RDS")
+chicago_tracts <- geojsonio::geojson_read("data/ChicagoCensusTracts.geojson",
+                                          what = "sp")
+chicago_tracts$EnviroScore <- 0
+chicago_tracts$EnviroScorePct <- 0
+for(i in 1:length(chicago_tracts)){
+  chicago_tracts$EnviroScore[i] <- dat.shiny[which(as.character(dat.shiny$CensusTract) == as.character(chicago_tracts$geoid10[i])), "EnviroScore"]
+  chicago_tracts$EnviroScorePct[i] <- dat.shiny.pct[which(as.character(dat.shiny.pct$CensusTract) == as.character(chicago_tracts$geoid10[i])), "EnviroScore"]
+}
+```
+
+```{r}
+pal <- colorNumeric("RdBu", domain = c(min(chicago_tracts$EnviroScore),
+                                       max(chicago_tracts$EnviroScore)),
+                    reverse = TRUE)
+pal2 <- colorNumeric("RdBu", domain = c(0, 1), reverse = TRUE)
+
+leaflet(chicago_tracts) %>%
+  addTiles(group = "EnviroScore") %>%
+  addTiles(group = "EnviroScorePct") %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = .75,
+              fillColor = ~pal(EnviroScore),
+              label = ~paste0("EnviroScore: ", round(EnviroScore, 2)),
+              group = "EnviroScore") %>%
+  addPolygons(stroke = FALSE, smoothFactor = 0.3, fillOpacity = .75,
+              fillColor = ~pal2(EnviroScorePct),
+              label = ~paste0("EnviroScorePct: ", round(EnviroScore, 2)),
+              group = "EnviroScorePct") %>%
+  addLegend(pal = pal, values = ~(chicago_tracts$EnviroScore), opacity = 1.0,
+            title = "EnviroScore", group = "EnviroScore") %>%
+  addLegend(pal = pal2, values = ~(chicago_tracts$EnviroScorePct), opacity = 1.0,
+            title = "EnviroScore (%)", group = "EnviroScorePct") %>%
+  addLayersControl(
+    baseGroups = c("EnviroScore", "EnviroScorePct"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+ 
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
