@@ -15,47 +15,68 @@ library(leaflet)
 # sudo yum install udunits2-devel
 # sudo yum install gdal
 # Had to build 2.2 from source
-https://stackoverflow.com/questions/46181614/install-r-sf-package-on-centos-gdal-shared-libary-error
+# https://stackoverflow.com/questions/46181614/install-r-sf-package-on-centos-gdal-shared-libary-error
 
 install.packages('sf')
 # install tigris on redhat
 install.packages("tigris")
-source("functions/download_census_tracts.R")
+source("R/download_census_tracts.R")
 
 ##==============================================================================
 ## LOAD DATA
 ##==============================================================================
-
 download.file("ftp://newftp.epa.gov/EJSCREEN/2018/EJSCREEN_2018_USPR_csv.zip", "data/EJSCREEN_2018_USPR_csv.zip")
 unzip("data/EJSCREEN_2018_USPR_csv.zip", exdir = "data/")
 
 # Should probably change this to data.table's fread
 dat <- read.csv("data/EJSCREEN_Full_USPR_2018.csv", stringsAsFactors = FALSE)
 
+fips <- read.csv("https://raw.githubusercontent.com/kjhealy/fips-codes/master/state_fips_master.csv")
 
-census_tracts <- download_census_tracts(infile = "data/censustracts_IL.Rds")
+# Old version only needed IL, new version needs all of them!
+# census_tracts <- download_census_tracts(infile = "data/censustracts_IL.Rds")
+# Download all of the census tract shape files 
+for(i in 1:50){
+  # census_tracts <- tigris::tracts(state = fips$fips[i])
+  saveRDS(tigris::tracts(state = fips$fips[i], class = "sf"),
+          file = paste0("data/censustracts/", fips$state_abbr[i], ".Rds"))
+}
 
-##==============================================================================
-## MAPBOX KEY
-## Register at mapbox.com and create a map... or use the one I made
-##==============================================================================
-# MAPBOX_STYLE_TEMPLATE <- paste0("https://api.mapbox.com/styles/v1/coc375492/",
-#                                 "cirqd7mgf001ygcnombg4jtb4/tiles/256/{z}/{x}/{y}",
-#                                 "?access_token=pk.eyJ1IjoiY29jMzc1NDkyIiwiYSI6ImN",
-#                                 "pcnBldzVqMTBmc3J0N25rZTIxZ3ludDIifQ.DgJIcLDjC1h9MtT8CaJ-pQ")
-# mb_attribution <- paste("© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> ",
-#                         "© <a href='http://www.openstreetmap.org/about/'>OpenStreetMap</a>")
-# 
+# also Washington DC
+saveRDS(tigris::tracts(11, class = "sf"),
+        file = paste0("data/censustracts/", "DC", ".Rds"))
+
+# New version still needs geoid
+geoid <- c()
+lf <- list.files("data/censustracts")
+geoid <- unlist(lapply(lf, FUN = function(x){readRDS(paste0("data/censustracts/", x))$GEOID}))
+
 ##==============================================================================
 ## AGGREGATE EJ DATA
 ##==============================================================================
+
+# library(sf)
+# library(tigris)
+# state = "WI"
+# lat <- 43.8138
+# lon <- -91.2519
+# 
+# State <- tigris::tracts(state, class = "sf")
+# state_tracts <- State[, c("GEOID", "TRACTCE")]
+# 
+# # convert the points to same CRS
+# my_points_tract <- sf::st_join(sf::st_as_sf(data.frame(x = lon, y = lat) , coords = c("x", "y"),
+#                                             crs = sf::st_crs(state_tracts)),
+#                                state_tracts)
+
+
 
 ## Here's the data without aggregating:
 # IL.ind <- which(substr(as.character(dat$ID), 1, 2) == "17")
 # dat.IL <- dat[IL.ind, ]
 
 # Not run first time
-ID.tract <- substr(as.character(dat.IL$ID), 1, 11)
+ID.tract <- substr(as.character(dat$ID), 1, 11)
 
 dat.env <- dat[, c("CANCER", "RESP", "DSLPM", "PM25", "OZONE", "PRE1960",
                    "PTRAF", "PRMP", "PTSDF", "PNPL", "PWDIS")]
@@ -72,26 +93,27 @@ dat2 <- cbind(dat.env, dat.demo)
 dat3 <- aggregate(dat2, by = list(ID.tract), FUN = "mean")
 colnames(dat3)[1] <- "ID"
 
-# Check to see all tracts covered
-sum(as.character(dat3$ID)!=sort(census_tracts$GEOID))
-# Needs to be 0
-# [1] 0
+# # Check to see all tracts covered
+sum(as.character(dat3$ID)!=sort(geoid))
+intersect(as.character(dat3$ID), geoid)
+# # Needs to be 0
+# # [1] 0
 ##########################################
 perc.rank <- function(x) trunc(rank(x)) / length(x)
 dat4 <- data.frame(ID = as.character(dat3[, 1]),
                    apply(dat3[, -1], 2, perc.rank))
 rownames(dat4) <- as.character(dat4$ID)
-dat5 <- dat4[census_tracts$GEOID, ]
+dat5 <- dat4[geoid, ]
 dat.env2 <- rowMeans(dat5[, c("CANCER", "RESP", "DSLPM", "PM25", "OZONE",
                               "PRE1960", "PTRAF", "PRMP", "PTSDF", "PNPL",
                               "PWDIS")])
 dat.demo2 <- rowMeans(dat5[, c("LOWINCPCT", "MINORPCT", "LESSHSPCT",
                                "LINGISOPCT", "UNDER5PCT", "OVER64PCT")])
 dat.EnviroScore <- (dat.env2 * dat.demo2)
-dat.EJ <- (dat.EnviroScore > quantile(dat.EnviroScore)[4])
+# dat.EJ <- (dat.EnviroScore > quantile(dat.EnviroScore)[4])
 
-dat.shiny.percentile <- data.frame(CensusTract = census_tracts$GEOID,
-                                   EJcommunity = dat.EJ,
+dat.shiny.percentile <- data.frame(CensusTract = geoid,
+                                   # EJcommunity = dat.EJ,
                                    EnviroScore = perc.rank(dat.EnviroScore),
                                    EnvironmentalIndicator = perc.rank(dat.env2),
                                    DemographicIndicator = perc.rank(dat.demo2),
@@ -99,10 +121,10 @@ dat.shiny.percentile <- data.frame(CensusTract = census_tracts$GEOID,
 dat6 <- data.frame(ID = as.character(dat3[, 1]),
                    dat3[, -1])
 rownames(dat6) <- as.character(dat6$ID)
-dat7 <- dat6[census_tracts$GEOID, ]
+dat7 <- dat6[geoid, ]
 
-dat.shiny <- data.frame(CensusTract = census_tracts$GEOID,
-                        EJcommunity = dat.EJ,
+dat.shiny <- data.frame(CensusTract = geoid,
+                        # EJcommunity = dat.EJ,
                         EnviroScore = dat.EnviroScore,
                         EnvironmentalIndicator = dat.env2,
                         DemographicIndicator = dat.demo2,
@@ -110,10 +132,10 @@ dat.shiny <- data.frame(CensusTract = census_tracts$GEOID,
 
 # dat.shiny <- dat.shiny[order(dat.shiny$EnviroScore, decreasing = TRUE), ]
 row.names(dat.shiny) <- NULL
-saveRDS(dat.shiny, "data/ShinyDat.RDS")
+saveRDS(dat.shiny, "data/ShinyDat_USA.RDS")
 # dat.shiny <- readRDS("data/ShinyDat.RDS")
 row.names(dat.shiny.percentile) <- NULL
-saveRDS(dat.shiny.percentile, "data/ShinyDatPercentile.RDS")
+saveRDS(dat.shiny.percentile, "data/ShinyDatPercentile_USA.RDS")
 # dat.shiny <- readRDS("data/ShinyDatPercentile.RDS")
 ##==============================================================================
 ## BASE MAP
