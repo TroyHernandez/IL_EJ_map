@@ -1,22 +1,6 @@
 # Plumber_FSS.R
 
-# #* @get /mean
-# normalMean <- function(samples=10){
-#   data <- rnorm(samples)
-#   mean(data)
-# }
-# 
-#* @post /sum
-# addTwo <- function(a, b){
-#   as.numeric(a) + as.numeric(b)
-# }
-
-# lat = 43.8138
-# lon = -91.2519
-# state = "WI"
-
-# curl -H "Content-Type: application/json" --data '{"lat": 43.8138, "lon": -91.2519, "state": "WI"}' localhost:8000/enviro
-
+library(sf)
 dat.shiny <- readRDS("/home/IL_EJ_map/data/ShinyDat_USA.RDS")
 
 #* @post /enviro
