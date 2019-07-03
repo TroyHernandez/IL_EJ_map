@@ -15,11 +15,17 @@
 # lon = -91.2519
 # state = "WI"
 
-dat.shiny <- readRDS("data/ShinyDat_USA.RDS")
+# curl -H "Content-Type: application/json" --data '{"lat": 43.8138, "lon": -91.2519, "state": "WI"}' localhost:8000/enviro
+
+dat.shiny <- readRDS("/home/IL_EJ_map/data/ShinyDat_USA.RDS")
 
 #* @post /enviro
 EnviroInd <- function(lat, lon, state){
-  State <- readRDS(paste0("data/censustracts/", state, ".Rds")) # tigris::tracts(state, class = "sf")
+  lat <- as.numeric(lat)
+  lon <- as.numeric(lon)
+  state <- as.character(state)
+
+  State <- readRDS(paste0("/home/IL_EJ_map/data/censustracts/", state, ".Rds")) # tigris::tracts(state, class = "sf")
   state_tracts <- State[, c("GEOID", "TRACTCE")]
   
   # convert the points to same CRS
